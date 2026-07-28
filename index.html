@@ -104,6 +104,20 @@
             ></div>
           </div>
 
+          <div class="preview-toolbar">
+            <div class="preview-controls" aria-label="원본 영상 미리보기 제어">
+              <button class="preview-control" id="playPauseButton" type="button" disabled>
+                <span id="playPauseIcon" aria-hidden="true">▶</span>
+                <span id="playPauseText">미리보기 재생</span>
+              </button>
+              <button class="preview-control" id="restartPreviewButton" type="button" disabled>
+                <span aria-hidden="true">↺</span>
+                처음으로
+              </button>
+            </div>
+            <span class="file-summary" id="fileSummary"></span>
+          </div>
+
           <div class="selection-help">
             <span class="help-swatch" aria-hidden="true"></span>
             <span>인디고색 테두리 안쪽이 주변 픽셀로 자연스럽게 채워집니다.</span>

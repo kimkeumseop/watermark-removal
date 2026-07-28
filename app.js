@@ -11,6 +11,11 @@ const elements = {
   sourceVideo: $("#sourceVideo"),
   resultVideo: $("#resultVideo"),
   overlay: $("#selectionOverlay"),
+  playPauseButton: $("#playPauseButton"),
+  playPauseIcon: $("#playPauseIcon"),
+  playPauseText: $("#playPauseText"),
+  restartPreviewButton: $("#restartPreviewButton"),
+  fileSummary: $("#fileSummary"),
   processButton: $("#processButton"),
   clearButton: $("#clearButton"),
   resetButton: $("#resetButton"),
@@ -121,6 +126,33 @@ function isVideoFile(file) {
   return file.type.startsWith("video/") || /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(file.name);
 }
 
+function formatFileSize(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function updateFileSummary() {
+  if (!state.file) {
+    elements.fileSummary.textContent = "";
+    return;
+  }
+
+  const dimensions =
+    state.videoW && state.videoH ? ` · ${state.videoW} × ${state.videoH}` : "";
+  elements.fileSummary.textContent =
+    `${state.file.name}${dimensions} · ${formatFileSize(state.file.size)}`;
+  elements.fileSummary.title = elements.fileSummary.textContent;
+}
+
+function syncPreviewControls() {
+  const hasVideo = Boolean(state.file && state.videoW && state.videoH);
+  elements.playPauseButton.disabled = !hasVideo || processing;
+  elements.restartPreviewButton.disabled = !hasVideo || processing;
+  const isPlaying = hasVideo && !elements.sourceVideo.paused && !elements.sourceVideo.ended;
+  elements.playPauseIcon.textContent = isPlaying ? "❚❚" : "▶";
+  elements.playPauseText.textContent = isPlaying ? "일시정지" : "미리보기 재생";
+}
+
 function selectVideo(file) {
   showNotice(elements.uploadError, "");
 
@@ -150,6 +182,8 @@ function selectVideo(file) {
   }
 
   showNotice(elements.processError, "");
+  updateFileSummary();
+  syncPreviewControls();
   renderRects();
   setStep("select");
   showPanel(elements.editPanel);
@@ -309,6 +343,8 @@ async function processVideo() {
   if (processing || !state.file || state.regions.length === 0) return;
 
   processing = true;
+  elements.sourceVideo.pause();
+  syncPreviewControls();
   showNotice(elements.processError, "");
   setProgress(0);
   showPanel(elements.processingPanel);
@@ -365,6 +401,7 @@ async function processVideo() {
     await deleteVirtualFile(inputFilename);
     await deleteVirtualFile(outputFilename);
     processing = false;
+    syncPreviewControls();
     renderRects();
   }
 }
@@ -379,6 +416,7 @@ function resetWorkspace() {
   state.videoH = 0;
   state.regions = [];
   elements.fileInput.value = "";
+  elements.sourceVideo.pause();
   elements.sourceVideo.removeAttribute("src");
   elements.sourceVideo.load();
   elements.resultVideo.removeAttribute("src");
@@ -386,6 +424,8 @@ function resetWorkspace() {
   showNotice(elements.sizeWarning, "");
   showNotice(elements.uploadError, "");
   showNotice(elements.processError, "");
+  updateFileSummary();
+  syncPreviewControls();
   setStep("upload");
   showPanel(elements.uploadPanel);
   renderRects();
@@ -419,7 +459,29 @@ elements.fileInput.addEventListener("change", () => {
 elements.sourceVideo.addEventListener("loadedmetadata", () => {
   state.videoW = elements.sourceVideo.videoWidth;
   state.videoH = elements.sourceVideo.videoHeight;
+  updateFileSummary();
+  syncPreviewControls();
   renderRects();
+});
+
+["play", "pause", "ended"].forEach((eventName) => {
+  elements.sourceVideo.addEventListener(eventName, syncPreviewControls);
+});
+
+elements.playPauseButton.addEventListener("click", () => {
+  if (elements.sourceVideo.paused || elements.sourceVideo.ended) {
+    elements.sourceVideo.play().catch((error) => {
+      console.error(error);
+      showNotice(elements.processError, "미리보기를 재생하지 못했어요. 다시 시도해 주세요.");
+    });
+  } else {
+    elements.sourceVideo.pause();
+  }
+});
+
+elements.restartPreviewButton.addEventListener("click", () => {
+  elements.sourceVideo.currentTime = 0;
+  syncPreviewControls();
 });
 
 elements.clearButton.addEventListener("click", () => {
@@ -431,6 +493,7 @@ elements.processButton.addEventListener("click", processVideo);
 elements.resetButton.addEventListener("click", resetWorkspace);
 elements.newVideoButton.addEventListener("click", resetWorkspace);
 elements.editAgainButton.addEventListener("click", () => {
+  elements.resultVideo.pause();
   setStep("select");
   showPanel(elements.editPanel);
   renderRects();

@@ -49,27 +49,7 @@ Vercel CLI를 프로젝트 폴더에서 실행하거나 Git 저장소를 연결�
 vercel
 ```
 
-Vercel 환경에서 wasm MIME을 직접 지정해야 한다면 프로젝트에 아래 `vercel.json`을 추가할 수 있습니다.
-
-```json
-{
-  "headers": [
-    {
-      "source": "/vendor/ffmpeg-core.wasm",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/wasm"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ]
-}
-```
+포함된 `vercel.json`이 약 31MB인 wasm 파일의 MIME과 1년 장기 캐시를 자동으로 설정합니다.
 
 ### GitHub Pages
 
@@ -87,6 +67,7 @@ Vercel 환경에서 wasm MIME을 직접 지정해야 한다면 프로젝트에 �
 ├─ app.js
 ├─ styles.css
 ├─ netlify.toml
+├─ vercel.json
 ├─ _headers
 └─ vendor/
    ├─ ffmpeg.js

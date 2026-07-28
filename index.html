@@ -1,0 +1,193 @@
+<!-- 브라우저에서 영상 워터마크 영역을 선택하고 제거하는 메인 화면 -->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="영상을 서버에 올리지 않고 브라우저 안에서 워터마크를 제거하는 무료 도구"
+    />
+    <meta name="theme-color" content="#f7f7fc" />
+    <title>클린프레임 | 영상 워터마크 제거</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="./vendor/util.js"></script>
+    <script defer src="./vendor/ffmpeg.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <main class="shell">
+      <header class="hero">
+        <a class="brand" href="./" aria-label="클린프레임 처음으로">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>클린프레임</span>
+        </a>
+        <div class="privacy-pill">
+          <span class="status-dot" aria-hidden="true"></span>
+          영상은 기기 밖으로 전송되지 않아요
+        </div>
+        <p class="eyebrow">PRIVATE · FREE · IN BROWSER</p>
+        <h1>거슬리는 워터마크만<br /><span>깔끔하게 지우세요.</span></h1>
+        <p class="hero-copy">
+          지우고 싶은 부분을 드래그하면 브라우저가 바로 처리합니다.
+          업로드도, 회원가입도 필요 없습니다.
+        </p>
+      </header>
+
+      <section class="workspace" aria-label="워터마크 제거 작업 공간">
+        <div class="stepper" aria-label="진행 단계">
+          <div class="step is-active" data-step="upload">
+            <span>1</span>
+            <strong>영상 선택</strong>
+          </div>
+          <div class="step-line" aria-hidden="true"></div>
+          <div class="step" data-step="select">
+            <span>2</span>
+            <strong>영역 지정</strong>
+          </div>
+          <div class="step-line" aria-hidden="true"></div>
+          <div class="step" data-step="done">
+            <span>3</span>
+            <strong>결과 저장</strong>
+          </div>
+        </div>
+
+        <div class="core-status" id="coreStatus" role="status" aria-live="polite">
+          <span class="core-indicator is-loading" id="coreIndicator" aria-hidden="true"></span>
+          <span id="coreStatusText">영상 처리 엔진을 준비하고 있어요</span>
+        </div>
+
+        <section class="panel upload-panel" id="uploadPanel" aria-labelledby="uploadTitle">
+          <div class="panel-heading">
+            <p class="panel-kicker">STEP 1</p>
+            <h2 id="uploadTitle">영상을 선택하세요</h2>
+            <p>MP4, MOV, WEBM 등 일반적인 영상 파일을 지원합니다.</p>
+          </div>
+
+          <label class="drop-zone" id="dropZone" for="fileInput">
+            <input
+              type="file"
+              id="fileInput"
+              accept="video/*"
+              aria-describedby="uploadHelp"
+            />
+            <span class="upload-icon" aria-hidden="true">
+              <span class="upload-arrow"></span>
+            </span>
+            <strong>영상을 이곳에 끌어다 놓으세요</strong>
+            <span>또는 <em>클릭해서 파일 선택</em></span>
+            <small id="uploadHelp">파일은 서버로 전송되지 않습니다</small>
+          </label>
+          <p class="notice warning hidden" id="sizeWarning" role="alert"></p>
+          <p class="notice error hidden" id="uploadError" role="alert"></p>
+        </section>
+
+        <section class="panel edit-panel hidden" id="editPanel" aria-labelledby="editTitle">
+          <div class="panel-heading panel-heading-row">
+            <div>
+              <p class="panel-kicker">STEP 2</p>
+              <h2 id="editTitle">지울 영역을 표시하세요</h2>
+              <p>워터마크 위를 드래그하세요. 여러 영역을 선택할 수 있습니다.</p>
+            </div>
+            <span class="count-badge" id="regionCount">선택 영역 0개</span>
+          </div>
+
+          <div class="video-stage" id="videoStage">
+            <video id="sourceVideo" controls playsinline preload="metadata"></video>
+            <div
+              class="selection-overlay"
+              id="selectionOverlay"
+              aria-label="워터마크 영역 선택 화면"
+            ></div>
+          </div>
+
+          <div class="selection-help">
+            <span class="help-swatch" aria-hidden="true"></span>
+            <span>인디고색 테두리 안쪽이 주변 픽셀로 자연스럽게 채워집니다.</span>
+          </div>
+
+          <p class="notice error hidden" id="processError" role="alert"></p>
+
+          <div class="actions">
+            <button class="button button-primary" id="processButton" type="button" disabled>
+              워터마크 제거
+              <span aria-hidden="true">→</span>
+            </button>
+            <button class="button button-secondary" id="clearButton" type="button">
+              영역 모두 지우기
+            </button>
+            <button class="button button-quiet" id="resetButton" type="button">
+              다른 영상
+            </button>
+          </div>
+        </section>
+
+        <section class="panel processing-panel hidden" id="processingPanel" aria-live="polite">
+          <div class="processing-orbit" aria-hidden="true">
+            <span></span>
+          </div>
+          <p class="panel-kicker">PROCESSING</p>
+          <h2>브라우저에서 영상을 처리하고 있어요</h2>
+          <p>영상 길이와 해상도에 따라 시간이 걸릴 수 있습니다. 창을 닫지 마세요.</p>
+          <div class="progress-track" aria-hidden="true">
+            <span id="progressBar"></span>
+          </div>
+          <strong class="progress-value" id="progressValue">0%</strong>
+        </section>
+
+        <section class="panel result-panel hidden" id="resultPanel" aria-labelledby="resultTitle">
+          <div class="result-header">
+            <span class="success-mark" aria-hidden="true">✓</span>
+            <div>
+              <p class="panel-kicker">COMPLETE</p>
+              <h2 id="resultTitle">영상이 준비됐어요</h2>
+              <p>결과를 확인한 뒤 MP4 파일로 저장하세요.</p>
+            </div>
+          </div>
+
+          <div class="result-video-wrap">
+            <video id="resultVideo" controls playsinline></video>
+          </div>
+
+          <div class="actions">
+            <a class="button button-primary" id="downloadLink" download="cleanframe-result.mp4">
+              결과 다운로드
+              <span aria-hidden="true">↓</span>
+            </a>
+            <button class="button button-secondary" id="editAgainButton" type="button">
+              영역 다시 선택
+            </button>
+            <button class="button button-quiet" id="newVideoButton" type="button">
+              다른 영상
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <section class="feature-grid" aria-label="서비스 특징">
+        <article>
+          <span class="feature-number">01</span>
+          <h2>완전한 로컬 처리</h2>
+          <p>영상은 네트워크로 전송되지 않고 현재 브라우저 안에서만 처리됩니다.</p>
+        </article>
+        <article>
+          <span class="feature-number">02</span>
+          <h2>설치 없이 바로</h2>
+          <p>별도 프로그램이나 계정 없이 최신 브라우저만 있으면 사용할 수 있습니다.</p>
+        </article>
+        <article>
+          <span class="feature-number">03</span>
+          <h2>여러 영역을 한 번에</h2>
+          <p>고정된 워터마크가 여러 곳에 있어도 원하는 만큼 영역을 지정할 수 있습니다.</p>
+        </article>
+      </section>
+
+      <footer>
+        <p>본인이 소유하거나 편집 권한이 있는 영상에만 사용해 주세요.</p>
+      </footer>
+    </main>
+  </body>
+</html>

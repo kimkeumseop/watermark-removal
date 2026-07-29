@@ -9,8 +9,14 @@
       content="영상을 서버에 올리지 않고 브라우저 안에서 워터마크를 제거하는 무료 도구"
     />
     <meta name="theme-color" content="#f7f7fc" />
-    <!-- 애드센스 게시자 ID. ads.js 가 이 값을 읽어 광고 스크립트를 불러온다. -->
+    <!-- 애드센스 사이트 확인용 메타 태그와 광고 로더. 크롤러가 HTML 원본에서
+         찾을 수 있도록 스크립트를 주입하지 않고 그대로 둔다. -->
     <meta name="google-adsense-account" content="ca-pub-1059415497859090" />
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1059415497859090"
+      crossorigin="anonymous"
+    ></script>
     <title>클린프레임 | 영상 워터마크 제거</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./vendor/util.js"></script>

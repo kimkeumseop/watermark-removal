@@ -65,11 +65,18 @@ vercel
 
 ### 게시자 ID가 들어가는 곳
 
-`index.html`, `privacy.html`, `terms.html` 세 파일의 아래 한 줄입니다. `ads.js`가 이 메타 태그에서 ID를 읽어 광고 스크립트를 불러오므로, 게시자 ID를 적는 곳은 페이지마다 이 한 줄뿐입니다. 이 태그는 구글의 사이트 소유 확인 수단이기도 합니다.
+`index.html`, `privacy.html`, `terms.html` 세 파일의 `<head>`에 아래 두 줄이 들어 있습니다.
 
 ```html
 <meta name="google-adsense-account" content="ca-pub-1059415497859090" />
+<script
+  async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1059415497859090"
+  crossorigin="anonymous"
+></script>
 ```
+
+애드센스 사이트 확인 크롤러는 HTML 원본에서 이 두 가지를 찾습니다. 스크립트를 JavaScript로 주입하면 크롤러가 못 찾아 "사이트를 확인할 수 없음"이 뜰 수 있으므로, 로더는 반드시 HTML에 그대로 두어야 합니다. `ads.js`는 광고 단위 렌더링만 담당합니다.
 
 ### ads.txt
 
@@ -90,6 +97,16 @@ google.com, pub-1059415497859090, DIRECT, f08c47fec0942fa0
 ```
 
 광고 자리는 작업 영역 아래와 FAQ 아래에 있습니다. 광고 자리를 늘리려면 같은 형태의 `aside`를 원하는 위치에 추가하면 됩니다. 버튼이나 영상 바로 옆에 붙이면 오클릭 유도로 판단될 수 있으므로 피하세요.
+
+### 사이트 확인이 실패할 때
+
+애드센스에서 "사이트를 확인할 수 없음"이 뜨면 순서대로 확인합니다.
+
+1. 애드센스에 등록한 주소가 실제 배포 주소와 정확히 같은지 확인합니다. `www.` 유무와 도메인 철자가 다르면 실패합니다.
+2. 브라우저 시크릿 창에서 배포 주소가 로그인 없이 열리는지 확인합니다. Vercel의 Deployment Protection이 켜져 있으면 구글 크롤러가 접근하지 못합니다. Vercel 프로젝트 Settings → Deployment Protection에서 Production 보호를 꺼야 합니다.
+3. 배포본의 HTML 원본(`Ctrl+U`)에 위의 메타 태그와 로더 스크립트가 보이는지 확인합니다.
+4. `https://도메인/ads.txt`가 열리는지 확인합니다.
+5. 위가 모두 정상이면 애드센스에서 다시 확인을 요청합니다. 반영에 최대 하루 정도 걸리기도 합니다.
 
 ### 승인 관련 참고
 

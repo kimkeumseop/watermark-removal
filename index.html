@@ -9,11 +9,14 @@
       content="영상을 서버에 올리지 않고 브라우저 안에서 워터마크를 제거하는 무료 도구"
     />
     <meta name="theme-color" content="#f7f7fc" />
+    <!-- 애드센스 게시자 ID. ads.js 가 이 값을 읽어 광고 스크립트를 불러온다. -->
+    <meta name="google-adsense-account" content="ca-pub-1059415497859090" />
     <title>클린프레임 | 영상 워터마크 제거</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./vendor/util.js"></script>
     <script defer src="./vendor/ffmpeg.js"></script>
     <script defer src="./app.js"></script>
+    <script defer src="./ads.js"></script>
   </head>
   <body>
     <div class="ambient ambient-one" aria-hidden="true"></div>
@@ -181,6 +184,11 @@
         </section>
       </section>
 
+      <!-- 광고 자리. data-ad-slot 을 애드센스에서 만든 광고 단위 ID로 바꾸세요. -->
+      <aside class="ad-slot" data-ad-slot="" data-ad-format="auto" aria-label="광고">
+        <span class="ad-label">광고</span>
+      </aside>
+
       <section class="feature-grid" aria-label="서비스 특징">
         <article>
           <span class="feature-number">01</span>
@@ -199,7 +207,66 @@
         </article>
       </section>
 
+      <section class="faq" aria-labelledby="faqTitle">
+        <p class="panel-kicker">FAQ</p>
+        <h2 id="faqTitle">자주 묻는 질문</h2>
+
+        <details>
+          <summary>영상이 서버로 올라가나요?</summary>
+          <p>
+            올라가지 않습니다. 파일을 고르면 브라우저 메모리에서만 읽고,
+            제거 작업도 브라우저 안에서 실행되는 ffmpeg.wasm이 처리합니다.
+            네트워크로 나가는 영상 데이터는 없습니다.
+          </p>
+        </details>
+
+        <details>
+          <summary>워터마크는 어떤 방식으로 지워지나요?</summary>
+          <p>
+            지정한 사각형 영역을 ffmpeg의 delogo 필터가 처리합니다.
+            영역 테두리 바깥의 픽셀을 참고해 안쪽을 다시 채우는 방식이라
+            배경이 단순할수록 자연스럽고, 무늬가 복잡한 배경 위에서는
+            흐릿한 자국이 남을 수 있습니다.
+          </p>
+        </details>
+
+        <details>
+          <summary>어떤 파일 형식을 지원하나요?</summary>
+          <p>
+            브라우저가 재생할 수 있는 MP4, MOV, WEBM 등을 불러올 수 있습니다.
+            결과물은 MP4로 저장됩니다. 영상이 길거나 해상도가 높으면
+            브라우저 메모리를 많이 쓰기 때문에 처리 시간이 길어집니다.
+          </p>
+        </details>
+
+        <details>
+          <summary>움직이는 워터마크도 지울 수 있나요?</summary>
+          <p>
+            위치가 고정된 워터마크에 맞춘 도구입니다. 화면 안에서 움직이는
+            워터마크는 지정한 영역을 벗어나는 순간 다시 보이게 됩니다.
+          </p>
+        </details>
+
+        <details>
+          <summary>처리 시간이 오래 걸리는데 정상인가요?</summary>
+          <p>
+            정상입니다. 서버 대신 본인 기기의 CPU가 모든 프레임을 다시
+            인코딩합니다. 처리 중에는 탭을 닫거나 다른 영상을 올리지 말고,
+            노트북이라면 전원을 연결한 상태로 두는 편이 빠릅니다.
+          </p>
+        </details>
+      </section>
+
+      <!-- 광고 자리. data-ad-slot 을 애드센스에서 만든 광고 단위 ID로 바꾸세요. -->
+      <aside class="ad-slot" data-ad-slot="" data-ad-format="auto" aria-label="광고">
+        <span class="ad-label">광고</span>
+      </aside>
+
       <footer>
+        <nav class="footer-nav" aria-label="약관 및 정책">
+          <a href="./privacy.html">개인정보처리방침</a>
+          <a href="./terms.html">이용약관</a>
+        </nav>
         <p>본인이 소유하거나 편집 권한이 있는 영상에만 사용해 주세요.</p>
       </footer>
     </main>

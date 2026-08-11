@@ -1,4 +1,4 @@
-<!-- 브라우저에서 영상 워터마크 영역을 선택하고 제거하는 메인 화면 -->
+<!-- 폴더 안 모든 이미지의 같은 위치 워터마크를 일괄 제거하는 화면 -->
 <!doctype html>
 <html lang="ko">
   <head>
@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="영상을 서버에 올리지 않고 브라우저 안에서 워터마크를 제거하는 무료 도구"
+      content="이미지 폴더를 올리고 대표 이미지에서 워터마크 위치를 지정하면 폴더 안 모든 이미지의 같은 위치 워터마크를 브라우저 안에서 한 번에 제거해 ZIP으로 저장합니다"
     />
     <meta name="theme-color" content="#f7f7fc" />
     <!-- 애드센스 사이트 확인용 메타 태그와 광고 로더. 크롤러가 HTML 원본에서
@@ -17,11 +17,9 @@
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1059415497859090"
       crossorigin="anonymous"
     ></script>
-    <title>클린프레임 | 영상 워터마크 제거</title>
+    <title>클린프레임 | 이미지 워터마크 일괄 제거</title>
     <link rel="stylesheet" href="./styles.css" />
-    <script defer src="./vendor/util.js"></script>
-    <script defer src="./vendor/ffmpeg.js"></script>
-    <script defer src="./app.js"></script>
+    <script defer src="./image.js"></script>
     <script defer src="./ads.js"></script>
   </head>
   <body>
@@ -36,25 +34,25 @@
         </a>
         <div class="privacy-pill">
           <span class="status-dot" aria-hidden="true"></span>
-          영상은 기기 밖으로 전송되지 않아요
+          이미지는 기기 밖으로 전송되지 않아요
         </div>
         <nav class="tool-nav" aria-label="도구 전환">
-          <a class="active" href="./" aria-current="page">🎬 영상</a>
-          <a href="./image.html">🖼️ 이미지 일괄</a>
+          <a href="./">🎬 영상</a>
+          <a class="active" href="./image.html" aria-current="page">🖼️ 이미지 일괄</a>
         </nav>
         <p class="eyebrow">PRIVATE · FREE · IN BROWSER</p>
-        <h1>거슬리는 워터마크만<br /><span>깔끔하게 지우세요.</span></h1>
+        <h1>같은 위치 워터마크를<br /><span>한 번에 지우세요.</span></h1>
         <p class="hero-copy">
-          지우고 싶은 부분을 드래그하면 브라우저가 바로 처리합니다.
-          업로드도, 회원가입도 필요 없습니다.
+          이미지 폴더를 올리고 대표 이미지에서 워터마크만 드래그하면,
+          폴더 안 모든 이미지의 같은 자리를 한 번에 처리해 ZIP으로 내려받습니다.
         </p>
       </header>
 
-      <section class="workspace" aria-label="워터마크 제거 작업 공간">
+      <section class="workspace" aria-label="이미지 워터마크 일괄 제거 작업 공간">
         <div class="stepper" aria-label="진행 단계">
           <div class="step is-active" data-step="upload">
             <span>1</span>
-            <strong>영상 선택</strong>
+            <strong>폴더 선택</strong>
           </div>
           <div class="step-line" aria-hidden="true"></div>
           <div class="step" data-step="select">
@@ -64,37 +62,32 @@
           <div class="step-line" aria-hidden="true"></div>
           <div class="step" data-step="done">
             <span>3</span>
-            <strong>결과 저장</strong>
+            <strong>ZIP 저장</strong>
           </div>
-        </div>
-
-        <div class="core-status" id="coreStatus" role="status" aria-live="polite">
-          <span class="core-indicator is-loading" id="coreIndicator" aria-hidden="true"></span>
-          <span id="coreStatusText">영상 처리 엔진을 준비하고 있어요</span>
         </div>
 
         <section class="panel upload-panel" id="uploadPanel" aria-labelledby="uploadTitle">
           <div class="panel-heading">
             <p class="panel-kicker">STEP 1</p>
-            <h2 id="uploadTitle">영상을 선택하세요</h2>
-            <p>MP4, MOV, WEBM 등 일반적인 영상 파일을 지원합니다.</p>
+            <h2 id="uploadTitle">이미지 폴더를 선택하세요</h2>
+            <p>폴더를 고르면 안에 있는 JPG · PNG · WEBP 이미지를 모두 불러옵니다.</p>
           </div>
 
-          <label class="drop-zone" id="dropZone" for="fileInput">
+          <label class="drop-zone" id="dropZone" for="folderInput">
             <input
               type="file"
-              id="fileInput"
-              accept="video/*"
+              id="folderInput"
+              webkitdirectory
+              multiple
               aria-describedby="uploadHelp"
             />
             <span class="upload-icon" aria-hidden="true">
               <span class="upload-arrow"></span>
             </span>
-            <strong>영상을 이곳에 끌어다 놓으세요</strong>
-            <span>또는 <em>클릭해서 파일 선택</em></span>
+            <strong>이미지 폴더를 이곳에 끌어다 놓으세요</strong>
+            <span>또는 <em>클릭해서 폴더 선택</em></span>
             <small id="uploadHelp">파일은 서버로 전송되지 않습니다</small>
           </label>
-          <p class="notice warning hidden" id="sizeWarning" role="alert"></p>
           <p class="notice error hidden" id="uploadError" role="alert"></p>
         </section>
 
@@ -102,14 +95,14 @@
           <div class="panel-heading panel-heading-row">
             <div>
               <p class="panel-kicker">STEP 2</p>
-              <h2 id="editTitle">지울 영역을 표시하세요</h2>
-              <p>워터마크 위를 드래그하세요. 여러 영역을 선택할 수 있습니다.</p>
+              <h2 id="editTitle">대표 이미지에서 지울 영역을 표시하세요</h2>
+              <p>여기서 지정한 위치가 <strong>폴더 안 모든 이미지</strong>에 같은 비율로 적용됩니다.</p>
             </div>
             <span class="count-badge" id="regionCount">선택 영역 0개</span>
           </div>
 
-          <div class="video-stage" id="videoStage">
-            <video id="sourceVideo" controls playsinline preload="metadata"></video>
+          <div class="video-stage" id="imageStage">
+            <img id="sourceImage" alt="대표 이미지 미리보기" />
             <div
               class="selection-overlay"
               id="selectionOverlay"
@@ -118,16 +111,6 @@
           </div>
 
           <div class="preview-toolbar">
-            <div class="preview-controls" aria-label="원본 영상 미리보기 제어">
-              <button class="preview-control" id="playPauseButton" type="button" disabled>
-                <span id="playPauseIcon" aria-hidden="true">▶</span>
-                <span id="playPauseText">미리보기 재생</span>
-              </button>
-              <button class="preview-control" id="restartPreviewButton" type="button" disabled>
-                <span aria-hidden="true">↺</span>
-                처음으로
-              </button>
-            </div>
             <span class="file-summary" id="fileSummary"></span>
           </div>
 
@@ -136,18 +119,26 @@
             <span>인디고색 테두리 안쪽이 주변 픽셀로 자연스럽게 채워집니다.</span>
           </div>
 
+          <div class="preview-pair hidden" id="previewPair">
+            <figure><figcaption>전</figcaption><canvas id="beforeCanvas"></canvas></figure>
+            <figure><figcaption>후</figcaption><canvas id="afterCanvas"></canvas></figure>
+          </div>
+
           <p class="notice error hidden" id="processError" role="alert"></p>
 
           <div class="actions">
             <button class="button button-primary" id="processButton" type="button" disabled>
-              워터마크 제거
+              모두 제거 → ZIP
               <span aria-hidden="true">→</span>
+            </button>
+            <button class="button button-secondary" id="previewButton" type="button" disabled>
+              전 / 후 미리보기
             </button>
             <button class="button button-secondary" id="clearButton" type="button">
               영역 모두 지우기
             </button>
             <button class="button button-quiet" id="resetButton" type="button">
-              다른 영상
+              다른 폴더
             </button>
           </div>
         </section>
@@ -157,8 +148,8 @@
             <span></span>
           </div>
           <p class="panel-kicker">PROCESSING</p>
-          <h2>브라우저에서 영상을 처리하고 있어요</h2>
-          <p>영상 길이와 해상도에 따라 시간이 걸릴 수 있습니다. 창을 닫지 마세요.</p>
+          <h2>브라우저에서 이미지를 처리하고 있어요</h2>
+          <p>이미지 수와 해상도에 따라 시간이 걸릴 수 있습니다. 창을 닫지 마세요.</p>
           <div class="progress-track" aria-hidden="true">
             <span id="progressBar"></span>
           </div>
@@ -170,25 +161,21 @@
             <span class="success-mark" aria-hidden="true">✓</span>
             <div>
               <p class="panel-kicker">COMPLETE</p>
-              <h2 id="resultTitle">영상이 준비됐어요</h2>
-              <p>결과를 확인한 뒤 MP4 파일로 저장하세요.</p>
+              <h2 id="resultTitle">이미지가 준비됐어요</h2>
+              <p id="resultSummary">처리된 이미지를 ZIP으로 저장했습니다.</p>
             </div>
           </div>
 
-          <div class="result-video-wrap">
-            <video id="resultVideo" controls playsinline></video>
-          </div>
-
           <div class="actions">
-            <a class="button button-primary" id="downloadLink" download="cleanframe-result.mp4">
-              결과 다운로드
+            <a class="button button-primary" id="downloadLink" download="cleanframe-images.zip">
+              ZIP 다시 받기
               <span aria-hidden="true">↓</span>
             </a>
             <button class="button button-secondary" id="editAgainButton" type="button">
               영역 다시 선택
             </button>
-            <button class="button button-quiet" id="newVideoButton" type="button">
-              다른 영상
+            <button class="button button-quiet" id="newFolderButton" type="button">
+              다른 폴더
             </button>
           </div>
         </section>
@@ -202,18 +189,18 @@
       <section class="feature-grid" aria-label="서비스 특징">
         <article>
           <span class="feature-number">01</span>
-          <h2>완전한 로컬 처리</h2>
-          <p>영상은 네트워크로 전송되지 않고 현재 브라우저 안에서만 처리됩니다.</p>
+          <h2>폴더째로 한 번에</h2>
+          <p>대표 이미지에서 한 번만 지정하면 폴더 안 모든 이미지에 같은 위치로 적용됩니다.</p>
         </article>
         <article>
           <span class="feature-number">02</span>
-          <h2>설치 없이 바로</h2>
-          <p>별도 프로그램이나 계정 없이 최신 브라우저만 있으면 사용할 수 있습니다.</p>
+          <h2>완전한 로컬 처리</h2>
+          <p>이미지는 네트워크로 전송되지 않고 현재 브라우저 안에서만 처리됩니다.</p>
         </article>
         <article>
           <span class="feature-number">03</span>
-          <h2>여러 영역을 한 번에</h2>
-          <p>고정된 워터마크가 여러 곳에 있어도 원하는 만큼 영역을 지정할 수 있습니다.</p>
+          <h2>원본 이름 그대로 ZIP</h2>
+          <p>처리 결과는 원래 파일명과 폴더 구조를 유지한 채 ZIP으로 저장됩니다.</p>
         </article>
       </section>
 
@@ -222,47 +209,37 @@
         <h2 id="faqTitle">자주 묻는 질문</h2>
 
         <details>
-          <summary>영상이 서버로 올라가나요?</summary>
+          <summary>이미지가 서버로 올라가나요?</summary>
           <p>
-            올라가지 않습니다. 파일을 고르면 브라우저 메모리에서만 읽고,
-            제거 작업도 브라우저 안에서 실행되는 ffmpeg.wasm이 처리합니다.
-            네트워크로 나가는 영상 데이터는 없습니다.
+            올라가지 않습니다. 폴더를 고르면 브라우저 메모리에서만 읽고,
+            제거 작업도 브라우저 안에서 실행됩니다. 네트워크로 나가는
+            이미지 데이터는 없습니다.
+          </p>
+        </details>
+
+        <details>
+          <summary>이미지마다 크기가 달라도 되나요?</summary>
+          <p>
+            지정한 영역을 비율로 저장해 각 이미지 크기에 맞춰 적용합니다.
+            같은 크기·같은 위치의 워터마크일 때 가장 정확하고, 크기가
+            다르면 비율에 따라 근사 적용됩니다.
           </p>
         </details>
 
         <details>
           <summary>워터마크는 어떤 방식으로 지워지나요?</summary>
           <p>
-            지정한 사각형 영역을 ffmpeg의 delogo 필터가 처리합니다.
-            영역 테두리 바깥의 픽셀을 참고해 안쪽을 다시 채우는 방식이라
-            배경이 단순할수록 자연스럽고, 무늬가 복잡한 배경 위에서는
-            흐릿한 자국이 남을 수 있습니다.
+            지정한 사각형 영역을 그 테두리 바깥 픽셀을 참고해 안쪽부터
+            다시 채우는 방식입니다. 배경이 단순할수록 자연스럽고,
+            무늬가 복잡한 배경에서는 흐릿한 자국이 남을 수 있습니다.
           </p>
         </details>
 
         <details>
-          <summary>어떤 파일 형식을 지원하나요?</summary>
+          <summary>어떤 형식으로 저장되나요?</summary>
           <p>
-            브라우저가 재생할 수 있는 MP4, MOV, WEBM 등을 불러올 수 있습니다.
-            결과물은 MP4로 저장됩니다. 영상이 길거나 해상도가 높으면
-            브라우저 메모리를 많이 쓰기 때문에 처리 시간이 길어집니다.
-          </p>
-        </details>
-
-        <details>
-          <summary>움직이는 워터마크도 지울 수 있나요?</summary>
-          <p>
-            위치가 고정된 워터마크에 맞춘 도구입니다. 화면 안에서 움직이는
-            워터마크는 지정한 영역을 벗어나는 순간 다시 보이게 됩니다.
-          </p>
-        </details>
-
-        <details>
-          <summary>처리 시간이 오래 걸리는데 정상인가요?</summary>
-          <p>
-            정상입니다. 서버 대신 본인 기기의 CPU가 모든 프레임을 다시
-            인코딩합니다. 처리 중에는 탭을 닫거나 다른 영상을 올리지 말고,
-            노트북이라면 전원을 연결한 상태로 두는 편이 빠릅니다.
+            각 이미지는 원본과 같은 형식(JPG는 JPG, PNG는 PNG)으로 저장되며,
+            원래 파일명과 폴더 구조를 유지한 하나의 ZIP 파일로 내려받습니다.
           </p>
         </details>
       </section>
@@ -277,7 +254,7 @@
           <a href="./privacy.html">개인정보처리방침</a>
           <a href="./terms.html">이용약관</a>
         </nav>
-        <p>본인이 소유하거나 편집 권한이 있는 영상에만 사용해 주세요.</p>
+        <p>본인이 소유하거나 편집 권한이 있는 이미지에만 사용해 주세요.</p>
       </footer>
     </main>
   </body>

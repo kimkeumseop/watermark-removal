@@ -1114,3 +1114,64 @@ footer {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ===== 도구 전환 내비 (영상 / 이미지 일괄) ===== */
+.tool-nav {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px;
+  margin: 18px auto 0;
+  border-radius: 9999px;
+  background: rgba(20, 20, 30, 0.05);
+  border: 1px solid rgba(20, 20, 30, 0.08);
+}
+.tool-nav a {
+  padding: 9px 18px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #5a5a68;
+  text-decoration: none;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.tool-nav a:hover {
+  color: #23233a;
+}
+.tool-nav a.active {
+  background: linear-gradient(135deg, #5b5ce2, #4f46e5);
+  color: #fff;
+  box-shadow: 0 8px 18px -8px rgba(91, 92, 226, 0.5);
+}
+
+/* 이미지 스테이지: .video-stage 를 재사용하되 <img> 대응 */
+.video-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #101018;
+}
+
+/* 전/후 미리보기 */
+.preview-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.preview-pair figure { margin: 0; }
+.preview-pair figcaption {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b6b7a;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.preview-pair canvas {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid #2b2b37;
+  background: #101018;
+}
+@media (max-width: 560px) {
+  .preview-pair { grid-template-columns: 1fr; }
+}

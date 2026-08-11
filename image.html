@@ -1,4 +1,4 @@
-<!-- 폴더 안 모든 이미지의 같은 위치 워터마크를 일괄 제거하는 화면 -->
+<!-- 이미지 한 장 또는 폴더 안 모든 이미지의 같은 위치 워터마크를 제거하는 화면 -->
 <!doctype html>
 <html lang="ko">
   <head>
@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="이미지 폴더를 올리고 대표 이미지에서 워터마크 위치를 지정하면 폴더 안 모든 이미지의 같은 위치 워터마크를 브라우저 안에서 한 번에 제거해 ZIP으로 저장합니다"
+      content="이미지 한 장 또는 폴더째로 올려 워터마크 위치를 드래그하면 브라우저 안에서 워터마크를 제거합니다. 여러 장이면 같은 위치를 한 번에 처리해 ZIP으로 저장합니다"
     />
     <meta name="theme-color" content="#f7f7fc" />
     <!-- 애드센스 사이트 확인용 메타 태그와 광고 로더. 크롤러가 HTML 원본에서
@@ -17,7 +17,7 @@
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1059415497859090"
       crossorigin="anonymous"
     ></script>
-    <title>클린프레임 | 이미지 워터마크 일괄 제거</title>
+    <title>클린프레임 | 이미지 워터마크 제거</title>
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./image.js"></script>
     <script defer src="./ads.js"></script>
@@ -38,21 +38,21 @@
         </div>
         <nav class="tool-nav" aria-label="도구 전환">
           <a href="./">🎬 영상</a>
-          <a class="active" href="./image.html" aria-current="page">🖼️ 이미지 일괄</a>
+          <a class="active" href="./image.html" aria-current="page">🖼️ 이미지</a>
         </nav>
         <p class="eyebrow">PRIVATE · FREE · IN BROWSER</p>
-        <h1>같은 위치 워터마크를<br /><span>한 번에 지우세요.</span></h1>
+        <h1>이미지 워터마크를<br /><span>한 장이든 폴더째든.</span></h1>
         <p class="hero-copy">
-          이미지 폴더를 올리고 대표 이미지에서 워터마크만 드래그하면,
-          폴더 안 모든 이미지의 같은 자리를 한 번에 처리해 ZIP으로 내려받습니다.
+          한 장이면 드래그해서 바로 지우고, 폴더면 대표 이미지에서 한 번만
+          지정해 모든 이미지의 같은 자리를 처리한 뒤 ZIP으로 내려받습니다.
         </p>
       </header>
 
-      <section class="workspace" aria-label="이미지 워터마크 일괄 제거 작업 공간">
+      <section class="workspace" aria-label="이미지 워터마크 제거 작업 공간">
         <div class="stepper" aria-label="진행 단계">
           <div class="step is-active" data-step="upload">
             <span>1</span>
-            <strong>폴더 선택</strong>
+            <strong>이미지 선택</strong>
           </div>
           <div class="step-line" aria-hidden="true"></div>
           <div class="step" data-step="select">
@@ -62,18 +62,25 @@
           <div class="step-line" aria-hidden="true"></div>
           <div class="step" data-step="done">
             <span>3</span>
-            <strong>ZIP 저장</strong>
+            <strong>결과 저장</strong>
           </div>
         </div>
 
         <section class="panel upload-panel" id="uploadPanel" aria-labelledby="uploadTitle">
           <div class="panel-heading">
             <p class="panel-kicker">STEP 1</p>
-            <h2 id="uploadTitle">이미지 폴더를 선택하세요</h2>
-            <p>폴더를 고르면 안에 있는 JPG · PNG · WEBP 이미지를 모두 불러옵니다.</p>
+            <h2 id="uploadTitle">이미지를 선택하세요</h2>
+            <p>한 장만 골라도 되고, 폴더째로 골라 여러 장을 한 번에 처리해도 됩니다. JPG · PNG · WEBP를 지원합니다.</p>
           </div>
 
-          <label class="drop-zone" id="dropZone" for="folderInput">
+          <div class="drop-zone" id="dropZone">
+            <input
+              type="file"
+              id="filesInput"
+              accept="image/*"
+              multiple
+              aria-describedby="uploadHelp"
+            />
             <input
               type="file"
               id="folderInput"
@@ -84,10 +91,14 @@
             <span class="upload-icon" aria-hidden="true">
               <span class="upload-arrow"></span>
             </span>
-            <strong>이미지 폴더를 이곳에 끌어다 놓으세요</strong>
-            <span>또는 <em>클릭해서 폴더 선택</em></span>
+            <strong>이미지나 폴더를 이곳에 끌어다 놓으세요</strong>
+            <span>또는 아래에서 선택하세요</span>
+            <div class="upload-choices">
+              <label class="button button-primary" for="filesInput">이미지 선택</label>
+              <label class="button button-secondary" for="folderInput">폴더 선택</label>
+            </div>
             <small id="uploadHelp">파일은 서버로 전송되지 않습니다</small>
-          </label>
+          </div>
           <p class="notice error hidden" id="uploadError" role="alert"></p>
         </section>
 
@@ -95,8 +106,8 @@
           <div class="panel-heading panel-heading-row">
             <div>
               <p class="panel-kicker">STEP 2</p>
-              <h2 id="editTitle">대표 이미지에서 지울 영역을 표시하세요</h2>
-              <p>여기서 지정한 위치가 <strong>폴더 안 모든 이미지</strong>에 같은 비율로 적용됩니다.</p>
+              <h2 id="editTitle">지울 영역을 표시하세요</h2>
+              <p id="editDescription">워터마크 위를 드래그하세요. 여러 영역을 선택할 수 있습니다.</p>
             </div>
             <span class="count-badge" id="regionCount">선택 영역 0개</span>
           </div>
@@ -128,7 +139,7 @@
 
           <div class="actions">
             <button class="button button-primary" id="processButton" type="button" disabled>
-              모두 제거 → ZIP
+              <span id="processButtonLabel">워터마크 제거</span>
               <span aria-hidden="true">→</span>
             </button>
             <button class="button button-secondary" id="previewButton" type="button" disabled>
@@ -138,7 +149,7 @@
               영역 모두 지우기
             </button>
             <button class="button button-quiet" id="resetButton" type="button">
-              다른 폴더
+              다른 이미지
             </button>
           </div>
         </section>
@@ -149,7 +160,7 @@
           </div>
           <p class="panel-kicker">PROCESSING</p>
           <h2>브라우저에서 이미지를 처리하고 있어요</h2>
-          <p>이미지 수와 해상도에 따라 시간이 걸릴 수 있습니다. 창을 닫지 마세요.</p>
+          <p id="processingNote">이미지 수와 해상도에 따라 시간이 걸릴 수 있습니다. 창을 닫지 마세요.</p>
           <div class="progress-track" aria-hidden="true">
             <span id="progressBar"></span>
           </div>
@@ -162,20 +173,24 @@
             <div>
               <p class="panel-kicker">COMPLETE</p>
               <h2 id="resultTitle">이미지가 준비됐어요</h2>
-              <p id="resultSummary">처리된 이미지를 ZIP으로 저장했습니다.</p>
+              <p id="resultSummary">처리된 이미지를 저장했습니다.</p>
             </div>
+          </div>
+
+          <div class="result-image-wrap hidden" id="resultImageWrap">
+            <img id="resultImage" alt="워터마크를 제거한 결과 이미지" />
           </div>
 
           <div class="actions">
             <a class="button button-primary" id="downloadLink" download="cleanframe-images.zip">
-              ZIP 다시 받기
+              <span id="downloadLabel">다시 받기</span>
               <span aria-hidden="true">↓</span>
             </a>
             <button class="button button-secondary" id="editAgainButton" type="button">
               영역 다시 선택
             </button>
             <button class="button button-quiet" id="newFolderButton" type="button">
-              다른 폴더
+              다른 이미지
             </button>
           </div>
         </section>
@@ -189,8 +204,8 @@
       <section class="feature-grid" aria-label="서비스 특징">
         <article>
           <span class="feature-number">01</span>
-          <h2>폴더째로 한 번에</h2>
-          <p>대표 이미지에서 한 번만 지정하면 폴더 안 모든 이미지에 같은 위치로 적용됩니다.</p>
+          <h2>한 장도, 폴더째도</h2>
+          <p>한 장이면 바로 지우고, 폴더면 대표 이미지에서 한 번만 지정해 전부 같은 위치로 처리합니다.</p>
         </article>
         <article>
           <span class="feature-number">02</span>
@@ -199,8 +214,8 @@
         </article>
         <article>
           <span class="feature-number">03</span>
-          <h2>원본 이름 그대로 ZIP</h2>
-          <p>처리 결과는 원래 파일명과 폴더 구조를 유지한 채 ZIP으로 저장됩니다.</p>
+          <h2>원본 형식 그대로</h2>
+          <p>한 장이면 이미지 파일로, 여러 장이면 원래 파일명과 폴더 구조를 유지한 ZIP으로 저장됩니다.</p>
         </article>
       </section>
 
@@ -236,10 +251,20 @@
         </details>
 
         <details>
+          <summary>한 장만 처리할 수도 있나요?</summary>
+          <p>
+            가능합니다. &ldquo;이미지 선택&rdquo;으로 한 장만 고르면 ZIP으로 묶지 않고
+            이미지 파일 그대로 저장되며, 결과를 화면에서 바로 확인할 수
+            있습니다. 두 장 이상이면 ZIP으로 묶입니다.
+          </p>
+        </details>
+
+        <details>
           <summary>어떤 형식으로 저장되나요?</summary>
           <p>
-            각 이미지는 원본과 같은 형식(JPG는 JPG, PNG는 PNG)으로 저장되며,
-            원래 파일명과 폴더 구조를 유지한 하나의 ZIP 파일로 내려받습니다.
+            각 이미지는 원본과 같은 형식(JPG는 JPG, PNG는 PNG)으로 저장됩니다.
+            한 장이면 파일 하나로, 여러 장이면 원래 파일명과 폴더 구조를 유지한
+            하나의 ZIP 파일로 내려받습니다.
           </p>
         </details>
       </section>

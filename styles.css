@@ -1175,3 +1175,34 @@ footer {
 @media (max-width: 560px) {
   .preview-pair { grid-template-columns: 1fr; }
 }
+
+/* ===== 업로드 선택 버튼 (이미지 / 폴더) ===== */
+.upload-choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 18px 0 4px;
+}
+.upload-choices .button {
+  cursor: pointer;
+}
+
+/* 단일 이미지 결과 미리보기 */
+.result-image-wrap {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid #2b2b37;
+  border-radius: 20px;
+  background: #101018;
+  box-shadow: 0 18px 42px rgba(17, 17, 26, 0.2);
+  line-height: 0;
+}
+.result-image-wrap img {
+  display: block;
+  width: 100%;
+  max-height: 68vh;
+  background: #101018;
+  object-fit: contain;
+}

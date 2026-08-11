@@ -4,6 +4,7 @@ const $ = (selector) => document.querySelector(selector);
 
 const elements = {
   folderInput: $("#folderInput"),
+  filesInput: $("#filesInput"),
   dropZone: $("#dropZone"),
   uploadPanel: $("#uploadPanel"),
   editPanel: $("#editPanel"),
@@ -12,10 +13,16 @@ const elements = {
   sourceImage: $("#sourceImage"),
   overlay: $("#selectionOverlay"),
   fileSummary: $("#fileSummary"),
+  editDescription: $("#editDescription"),
   previewPair: $("#previewPair"),
   beforeCanvas: $("#beforeCanvas"),
   afterCanvas: $("#afterCanvas"),
   processButton: $("#processButton"),
+  processButtonLabel: $("#processButtonLabel"),
+  processingNote: $("#processingNote"),
+  resultImageWrap: $("#resultImageWrap"),
+  resultImage: $("#resultImage"),
+  downloadLabel: $("#downloadLabel"),
   previewButton: $("#previewButton"),
   clearButton: $("#clearButton"),
   resetButton: $("#resetButton"),
@@ -84,8 +91,33 @@ function setProgress(value) {
   elements.progressValue.textContent = `${percent}%`;
 }
 
-/* ---------------- 폴더 불러오기 ---------------- */
-function selectFolder(fileList) {
+/* ---------------- 이미지 불러오기 (한 장 또는 폴더) ---------------- */
+function isSingle() {
+  return state.files.length === 1;
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+/** 한 장인지 여러 장인지에 따라 안내 문구와 버튼 이름을 맞춘다. */
+function syncModeLabels() {
+  const single = isSingle();
+  const count = state.files.length;
+
+  elements.editDescription.textContent = single
+    ? "워터마크 위를 드래그하세요. 여러 영역을 선택할 수 있습니다."
+    : `여기서 지정한 위치가 이미지 ${count}장 전체에 같은 비율로 적용됩니다.`;
+
+  elements.processButtonLabel.textContent = single ? "워터마크 제거" : "모두 제거 → ZIP";
+  elements.processingNote.textContent = single
+    ? "해상도에 따라 잠시 걸릴 수 있습니다. 창을 닫지 마세요."
+    : `이미지 ${count}장을 처리합니다. 창을 닫지 마세요.`;
+  elements.downloadLabel.textContent = single ? "이미지 다시 받기" : "ZIP 다시 받기";
+}
+
+function selectImages(fileList) {
   showNotice(elements.uploadError, "");
   const files = [...fileList].filter((f) => IMAGE_RE.test(f.name));
 
@@ -102,10 +134,16 @@ function selectFolder(fileList) {
   state.repH = 0;
   state.sourceUrl = URL.createObjectURL(files[0]);
   elements.sourceImage.src = state.sourceUrl;
-  elements.fileSummary.textContent = `이미지 ${files.length}장 · 대표: ${files[0].name}`;
+  elements.sourceImage.alt = files.length === 1 ? "선택한 이미지 미리보기" : "대표 이미지 미리보기";
+  elements.fileSummary.textContent =
+    files.length === 1
+      ? `${files[0].name} · ${formatFileSize(files[0].size)}`
+      : `이미지 ${files.length}장 · 대표: ${files[0].name}`;
 
   showNotice(elements.processError, "");
   elements.previewPair.classList.add("hidden");
+  elements.resultImageWrap.classList.add("hidden");
+  syncModeLabels();
   renderRects();
   setStep("select");
   showPanel(elements.editPanel);
@@ -314,53 +352,85 @@ elements.previewButton.addEventListener("click", async () => {
   }
 });
 
-/* ---------------- 일괄 처리 ---------------- */
+/* ---------------- 처리 (한 장 또는 일괄) ---------------- */
+function triggerDownload(url, filename) {
+  const auto = document.createElement("a");
+  auto.href = url;
+  auto.download = filename;
+  document.body.appendChild(auto);
+  auto.click();
+  auto.remove();
+}
+
+/** 원본 이름에 접미사를 붙여 원본을 덮어쓸 위험을 줄인다. */
+function cleanedName(name) {
+  const base = name.replace(/^.*[\\/]/, "");
+  const dot = base.lastIndexOf(".");
+  if (dot <= 0) return `${base}-clean`;
+  return `${base.slice(0, dot)}-clean${base.slice(dot)}`;
+}
+
 async function processAll() {
   if (processing || state.files.length === 0 || state.regions.length === 0) return;
 
   processing = true;
   showNotice(elements.processError, "");
   setProgress(0);
+  elements.resultImageWrap.classList.add("hidden");
   showPanel(elements.processingPanel);
   elements.processingPanel.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  const zip = new ZipStore();
   const canvas = document.createElement("canvas");
-  let done = 0;
 
   try {
-    for (let i = 0; i < state.files.length; i++) {
-      const file = state.files[i];
-      setProgress(Math.round((i / state.files.length) * 100));
-      try {
-        const ctx = await renderToCanvas(file, canvas, true);
-        const blob = await canvasToBlob(canvas, outputType(file), 0.95);
-        const buffer = new Uint8Array(await blob.arrayBuffer());
-        await zip.add(file.webkitRelativePath || file.name, buffer);
-        done++;
-      } catch (error) {
-        console.warn("건너뜀:", file.name, error);
+    if (isSingle()) {
+      // 한 장은 ZIP으로 묶지 않고 이미지 파일 그대로 저장한다.
+      const file = state.files[0];
+      setProgress(20);
+      await renderToCanvas(file, canvas, true);
+      setProgress(70);
+      const blob = await canvasToBlob(canvas, outputType(file), 0.95);
+      if (!blob || blob.size === 0) throw new Error("no-output");
+
+      revokeUrl("resultUrl");
+      state.resultUrl = URL.createObjectURL(blob);
+      const filename = cleanedName(file.name);
+      elements.downloadLink.href = state.resultUrl;
+      elements.downloadLink.download = filename;
+      elements.resultImage.src = state.resultUrl;
+      elements.resultImageWrap.classList.remove("hidden");
+      elements.resultSummary.textContent = `${filename} 으로 저장했습니다. 결과를 확인해 보세요.`;
+      setProgress(100);
+      triggerDownload(state.resultUrl, filename);
+    } else {
+      const zip = new ZipStore();
+      let done = 0;
+      for (let i = 0; i < state.files.length; i++) {
+        const file = state.files[i];
+        setProgress(Math.round((i / state.files.length) * 100));
+        try {
+          await renderToCanvas(file, canvas, true);
+          const blob = await canvasToBlob(canvas, outputType(file), 0.95);
+          const buffer = new Uint8Array(await blob.arrayBuffer());
+          await zip.add(file.webkitRelativePath || file.name, buffer);
+          done++;
+        } catch (error) {
+          console.warn("건너뜀:", file.name, error);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0)); // UI 양보
       }
-      await new Promise((resolve) => setTimeout(resolve, 0)); // UI 양보
+
+      if (done === 0) throw new Error("no-output");
+
+      setProgress(100);
+      revokeUrl("resultUrl");
+      state.resultUrl = URL.createObjectURL(zip.generate());
+      elements.downloadLink.href = state.resultUrl;
+      elements.downloadLink.download = "cleanframe-images.zip";
+      elements.resultSummary.textContent =
+        `${done}장을 처리해 ZIP으로 저장했습니다${done < state.files.length ? ` (${state.files.length - done}장은 건너뜀)` : ""}.`;
+      triggerDownload(state.resultUrl, "cleanframe-images.zip");
     }
-
-    if (done === 0) throw new Error("no-output");
-
-    setProgress(100);
-    const zipBlob = zip.generate();
-    revokeUrl("resultUrl");
-    state.resultUrl = URL.createObjectURL(zipBlob);
-    elements.downloadLink.href = state.resultUrl;
-    elements.resultSummary.textContent =
-      `${done}장을 처리해 ZIP으로 저장했습니다${done < state.files.length ? ` (${state.files.length - done}장은 건너뜀)` : ""}.`;
-
-    // 자동 다운로드
-    const auto = document.createElement("a");
-    auto.href = state.resultUrl;
-    auto.download = "cleanframe-images.zip";
-    document.body.appendChild(auto);
-    auto.click();
-    auto.remove();
 
     setStep("done");
     showPanel(elements.resultPanel);
@@ -370,7 +440,7 @@ async function processAll() {
     showPanel(elements.editPanel);
     showNotice(
       elements.processError,
-      "이미지를 처리하지 못했어요. 폴더에 유효한 이미지가 있는지 확인하고 다시 시도해 주세요.",
+      "이미지를 처리하지 못했어요. 형식이나 용량 문제일 수 있습니다. 다른 이미지로 다시 시도해 주세요.",
     );
   } finally {
     processing = false;
@@ -388,9 +458,12 @@ function resetWorkspace() {
   state.repW = 0;
   state.repH = 0;
   elements.folderInput.value = "";
+  elements.filesInput.value = "";
   elements.sourceImage.removeAttribute("src");
+  elements.resultImage.removeAttribute("src");
   elements.fileSummary.textContent = "";
   elements.previewPair.classList.add("hidden");
+  elements.resultImageWrap.classList.add("hidden");
   showNotice(elements.uploadError, "");
   showNotice(elements.processError, "");
   setStep("upload");
@@ -414,11 +487,14 @@ function resetWorkspace() {
 elements.dropZone.addEventListener("drop", (event) => {
   event.preventDefault();
   if (event.dataTransfer && event.dataTransfer.files.length) {
-    selectFolder(event.dataTransfer.files);
+    selectImages(event.dataTransfer.files);
   }
 });
 elements.folderInput.addEventListener("change", () => {
-  if (elements.folderInput.files.length) selectFolder(elements.folderInput.files);
+  if (elements.folderInput.files.length) selectImages(elements.folderInput.files);
+});
+elements.filesInput.addEventListener("change", () => {
+  if (elements.filesInput.files.length) selectImages(elements.filesInput.files);
 });
 
 elements.processButton.addEventListener("click", processAll);

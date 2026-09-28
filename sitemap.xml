@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 검색 로봇에 공개된 도구와 사용 안내 페이지를 알리는 사이트맵 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://watermark-removal-nine.vercel.app/</loc></url>
+  <url><loc>https://watermark-removal-nine.vercel.app/image.html</loc></url>
+  <url><loc>https://watermark-removal-nine.vercel.app/guide.html</loc></url>
+</urlset>

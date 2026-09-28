@@ -181,6 +181,11 @@ a {
   word-break: keep-all;
 }
 
+.hero-copy a {
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
 .workspace {
   position: relative;
   width: min(960px, 100%);
@@ -933,6 +938,10 @@ a {
   font-weight: 700;
 }
 
+.guide p + p {
+  margin-top: 12px;
+}
+
 footer {
   padding-top: 20px;
   color: #9494a6;
@@ -943,6 +952,7 @@ footer {
 
 .footer-nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 18px;

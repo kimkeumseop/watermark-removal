@@ -1,0 +1,5 @@
+# 검색 로봇에 공개 페이지와 사이트맵을 안내한다.
+User-agent: *
+Allow: /
+
+Sitemap: https://watermark-removal-nine.vercel.app/sitemap.xml
